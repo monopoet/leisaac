@@ -38,17 +38,18 @@ class LiftCube2SceneCfg(SingleArmTaskSceneCfg):
 
     scene: AssetBaseCfg = TABLE_WITH_CUBE_CFG.replace(prim_path="{ENV_REGEX_NS}/Scene")
 
-    # Top-view camera - positioned above looking down
+    # Top-view camera - positioned above looking straight down
+    # Offset from robot base to cover the entire workspace (robot, cube, target)
     top: TiledCameraCfg = TiledCameraCfg(
         prim_path="{ENV_REGEX_NS}/Robot/base/top_camera",
         offset=TiledCameraCfg.OffsetCfg(
-            pos=(0.0, 0.0, 0.8),  # Positioned above the workspace
-            rot=(0.0, 0.70711, 0.0, 0.70711),  # Looking straight down (90 degrees pitch)
+            pos=(0.55, 0.64, 1.2),  # Above workspace center (offset from robot base)
+            rot=(0.70711, 0.0, 0.0, 0.70711),  # Looking straight down (-90 deg pitch)
             convention="opengl",
         ),
         data_types=["rgb"],
         spawn=sim_utils.PinholeCameraCfg(
-            focal_length=24.0,
+            focal_length=15.0,  # Wider FOV to capture entire workspace
             focus_distance=400.0,
             horizontal_aperture=38.11,
             clipping_range=(0.01, 50.0),
@@ -80,7 +81,7 @@ class LiftCube2SceneCfg(SingleArmTaskSceneCfg):
         update_period=1 / 30.0,  # 30FPS
     )
 
-    # Blue target paper - spawned as a visual marker
+    # Blue target paper - spawned on table surface, to robot's right side
     target_paper: RigidObjectCfg = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Scene/target_paper",
         spawn=sim_utils.CuboidCfg(
@@ -96,7 +97,7 @@ class LiftCube2SceneCfg(SingleArmTaskSceneCfg):
             ),
         ),
         init_state=RigidObjectCfg.InitialStateCfg(
-            pos=(0.15, 0.0, 0.005),  # Positioned next to cube, on table surface
+            pos=(0.90, -0.12, 0.881),  # On table surface, robot's right side (y negative)
             rot=(1.0, 0.0, 0.0, 0.0),
         ),
     )
@@ -212,8 +213,8 @@ class LiftCube2EnvCfg(SingleArmTaskEnvCfg):
     def __post_init__(self) -> None:
         super().__post_init__()
 
-        self.viewer.eye = (-0.4, -0.6, 0.7)
-        self.viewer.lookat = (0.0, 0.0, 0.0)
+        self.viewer.eye = (0.0, -1.5, 1.5)
+        self.viewer.lookat = (0.9, 0.0, 0.88)
 
         self.scene.robot.init_state.pos = (0.35, -0.64, 0.01)
 
@@ -222,24 +223,24 @@ class LiftCube2EnvCfg(SingleArmTaskEnvCfg):
         domain_randomization(
             self,
             random_options=[
-                # Randomize cube position
+                # Randomize cube position - offset to robot's left side (y positive)
                 randomize_object_uniform(
                     "cube",
                     pose_range={
                         "x": (-0.05, 0.05),
-                        "y": (-0.05, 0.05),
+                        "y": (0.05, 0.15),  # Offset to robot's left (y positive)
                         "z": (0.0, 0.0),
                         "yaw": (-30 * torch.pi / 180, 30 * torch.pi / 180),
                     },
                 ),
-                # Randomize target paper position (smaller range)
+                # Randomize target paper position (smaller range, stays on right side)
                 randomize_object_uniform(
                     "target_paper",
                     pose_range={
-                        "x": (-0.02, 0.02),
-                        "y": (-0.02, 0.02),
+                        "x": (-0.03, 0.03),
+                        "y": (-0.03, 0.03),
                         "z": (0.0, 0.0),
-                        "yaw": (-15 * torch.pi / 180, 15 * torch.pi / 180),
+                        "yaw": (-10 * torch.pi / 180, 10 * torch.pi / 180),
                     },
                 ),
                 # Randomize top camera

@@ -29,8 +29,8 @@ class LiftCube2EnvCfg(SingleArmTaskDirectEnvCfg):
 
         self.scene.robot.init_state.pos = (0.35, -0.64, 0.01)
 
-        self.viewer.eye = (-0.4, -0.6, 0.7)
-        self.viewer.lookat = (0.0, 0.0, 0.0)
+        self.viewer.eye = (0.0, -1.5, 1.5)
+        self.viewer.lookat = (0.9, 0.0, 0.88)
 
         # Update cameras list to use top and wrist
         self.cameras = ["top", "wrist"]
@@ -40,24 +40,24 @@ class LiftCube2EnvCfg(SingleArmTaskDirectEnvCfg):
         domain_randomization(
             self,
             random_options=[
-                # Randomize cube position
+                # Randomize cube position - offset to robot's left side (y positive)
                 randomize_object_uniform(
                     "cube",
                     pose_range={
                         "x": (-0.05, 0.05),
-                        "y": (-0.05, 0.05),
+                        "y": (0.05, 0.15),  # Offset to robot's left (y positive)
                         "z": (0.0, 0.0),
                         "yaw": (-30 * torch.pi / 180, 30 * torch.pi / 180),
                     },
                 ),
-                # Randomize target paper position
+                # Randomize target paper position (smaller range, stays on right side)
                 randomize_object_uniform(
                     "target_paper",
                     pose_range={
-                        "x": (-0.02, 0.02),
-                        "y": (-0.02, 0.02),
+                        "x": (-0.03, 0.03),
+                        "y": (-0.03, 0.03),
                         "z": (0.0, 0.0),
-                        "yaw": (-15 * torch.pi / 180, 15 * torch.pi / 180),
+                        "yaw": (-10 * torch.pi / 180, 10 * torch.pi / 180),
                     },
                 ),
                 # Randomize top camera
